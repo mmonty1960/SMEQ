@@ -45,7 +45,6 @@ This file is part of SMEQ.
 #include <QInputDialog>
 #include <qtextstream.h>
 #include "SMEQ.h"
-#include <minpack.h>
 #include <cminpack.h>
 #include <math.h>
 #include <stdio.h>
@@ -62,7 +61,6 @@ This file is part of SMEQ.
 #include <qwt_text.h>
 #include <qwt_symbol.h>
 #include <gsl/gsl_math.h>
-#include <cblas.h>
 #include <tgmath.h>
 #include <QDesktopServices>
 

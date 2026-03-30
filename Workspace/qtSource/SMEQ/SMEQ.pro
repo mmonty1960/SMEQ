@@ -51,11 +51,24 @@ QT += widgets
 # how to port your code away from it.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+win32 {
+        QT += printsupport
+        include( .\QWT_win.pri )
+        CONFIG+= c++11 gui console
+        INCLUDEPATH += C:\gsl-2.7\include C:\gsl-2.7\include\gsl C:\qwt-6.2.0\include
+        LIBS += -L"C:/Qt/Tools/mingw810_64/cminpack-1.3.8/build" -lcminpack
+        target.path=.\
+        INSTALLS += target
+}
+
+unix {
+    CONFIG += link_pkgconfig
+    PKGCONFIG += cminpack cblas blas qwt
+}
+INCLUDEPATH += .
 
 # Input
 HEADERS += SMEQ.h
 FORMS += SMEQ.ui
 SOURCES += main.cpp SMEQ.cpp
 
-CONFIG += link_pkgconfig
-PKGCONFIG += cminpack cblas blas qwt

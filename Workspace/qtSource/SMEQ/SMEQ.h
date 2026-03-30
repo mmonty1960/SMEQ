@@ -43,7 +43,6 @@ This file is part of SMEQ.
 #define SMEQ_H
  
 #include "ui_SMEQ.h"
-#include <minpack.h>
 #include <cminpack.h>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
