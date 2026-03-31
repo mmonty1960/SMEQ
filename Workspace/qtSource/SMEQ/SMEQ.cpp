@@ -71,7 +71,7 @@ QColor myColor[7]={Qt::black,Qt::blue,Qt::cyan,Qt::green,Qt::magenta,Qt::red,Qt:
 QString pathroot;
 int Nw=437;
 int iLock=0;
-static double A,B,C,xy[2][100];
+static double xy[2][100];
 static double SUMw,d_layer,Nini,Kini,thetaService,phiService,TISc,Pa[5];
 static double Pig=acos(-1.);
 static double REMAs,REMAp,REMAu,RnsEMAs,RnsEMAp,RnsEMAu,R1s,R1p,nOl,kOl;
@@ -106,7 +106,7 @@ static double MRh[1000][30];
 */
 
 // funzioni invocate
-void parabolicFit(int n);
+void parabolicFit(int n,double& A, double& B, double& C);
 void spada(int column, QString fileRh);
 void RsRpEMA(int iWL, double theta, double phiS, int iTISopt);
 void RsRp(complex<double> N1, complex<double> N2, complex<double> theta1,
@@ -232,7 +232,7 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
 
     printf("->Gplot: iGraph=%d iColor=%d iStyle=%d iQuantity=%d Ndata=%d\n",iGraph,iColor,iStyle,iQ,Nw);
 
-    double Xp[Nw],Yp[Nw];
+    vector <double> Xp(Nw),Yp(Nw);
     for(int ii=0;ii< Nw;ii++){
         Xp[ii]=MRh[ii][0]; //WL
         Yp[ii]=MRh[ii][iQ];//quantity to be plot
@@ -245,7 +245,7 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
     grid->enableY(true);
     grid->enableYMin(true);
     QwtPlotCurve *curve1=new QwtPlotCurve("Curve 1");
-    curve1->setSamples(Xp, Yp, Nw);
+    curve1->setSamples(Xp.data(), Yp.data(), Nw);
     if(iStyle==0)
         curve1->setPen(QPen(myColor[iColor],3,Qt::SolidLine));
     else if(iStyle==1)
@@ -258,8 +258,18 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
             G1_Rh = new QwtPlot();
             connect(G1_Rh, &QObject::destroyed, this, [this]() {
                 G1_Rh = nullptr;
+                m_pickerG1 = nullptr;
             });
             G1_Rh->setAttribute(Qt::WA_DeleteOnClose);
+            m_pickerG1 = new QwtPlotPicker(
+                QwtAxis::XBottom, QwtAxis::YLeft,
+                QwtPlotPicker::CrossRubberBand,
+                QwtPicker::AlwaysOn,
+                G1_Rh->canvas()
+                );
+            m_pickerG1->setStateMachine(new QwtPickerDragPointMachine());
+            m_pickerG1->setRubberBandPen(QPen(Qt::red));
+            m_pickerG1->setTrackerPen(QPen(Qt::black));
         }
         else {
             // esiste già: portalo in primo piano
@@ -283,8 +293,18 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
             G2_Rns = new QwtPlot();
             connect(G2_Rns, &QObject::destroyed, this, [this]() {
                 G2_Rns = nullptr;
+                m_pickerG2 = nullptr;
             });
             G2_Rns->setAttribute(Qt::WA_DeleteOnClose);
+            m_pickerG2 = new QwtPlotPicker(
+                QwtAxis::XBottom, QwtAxis::YLeft,
+                QwtPlotPicker::CrossRubberBand,
+                QwtPicker::AlwaysOn,
+                G2_Rns->canvas()
+                );
+            m_pickerG2->setStateMachine(new QwtPickerDragPointMachine());
+            m_pickerG2->setRubberBandPen(QPen(Qt::red));
+            m_pickerG2->setTrackerPen(QPen(Qt::black));
         }
         else {
             // esiste già: portalo in primo piano
@@ -308,11 +328,18 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
             Gph = new QwtPlot();
             connect(Gph, &QObject::destroyed, this, [this]() {
                 Gph = nullptr;
+                m_pickerGph = nullptr;
             });
             Gph->setAttribute(Qt::WA_DeleteOnClose);
-            QwtPlotPicker *m_picker1 = new QwtPlotPicker( QwtAxis::XBottom, QwtAxis::YLeft,
-                                                         QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
-                                                         Gph->canvas() );
+            m_pickerGph = new QwtPlotPicker(
+                QwtAxis::XBottom, QwtAxis::YLeft,
+                QwtPlotPicker::CrossRubberBand,
+                QwtPicker::AlwaysOn,
+                Gph->canvas()
+                );
+            m_pickerGph->setStateMachine(new QwtPickerDragPointMachine());
+            m_pickerGph->setRubberBandPen(QPen(Qt::red));
+            m_pickerGph->setTrackerPen(QPen(Qt::black));
         }
         else {
             // esiste già: portalo in primo piano
@@ -499,7 +526,7 @@ void SMEQ::EMAcheck(){
         Drms=Drms+term*term;
     }
     Gplot(1,1,3,2,"check EMA",11);
-    lineEdit_RMS -> setText(QString::number(Drms/double(Nw)));
+    lineEdit_RMS -> setText(QString::number(sqrt(Drms/double(Nw))));
     lineEdit_PV -> setText(QString::number(Dmax-Dmin));
     double meanVal=MeanComputing(11);
     lineEdit_meanRhEMA->setText(QString::number(meanVal,'f',4));
@@ -570,7 +597,7 @@ void SMEQ::EMA(){
         streamMnk << MRh[i][0] <<"\t"<< MRh[i][3] <<"\t"<< MRh[i][4] <<"\t"<< MRh[i][5] <<"\t"<< MRh[i][6] <<"\n";
     }
     fileMnk.close();
-    lineEdit_RMS -> setText(QString::number(Drms/double(Nw)));
+    lineEdit_RMS -> setText(QString::number(sqrt(Drms/double(Nw))));
     lineEdit_PV -> setText(QString::number(Dmax-Dmin));
     //PLOT final simulated Rh
     for(int ii=0;ii< Nw;ii++){
@@ -599,7 +626,6 @@ void SMEQ::getFileRns(){
 
 void SMEQ::PlotRns(){
     //plot of Rns experimental and computed
-    double rms=0;
     //plot Rns exp
     Gplot(2,0,0,0,"R-nearspecular spectrum",12);
 
@@ -613,14 +639,15 @@ void SMEQ::PlotRns(){
     printf("->PlotRns computing with theta(rad)=%f phiS(rad)=%f sigma(nm)=%f\n",theta,phiS,sigma);
     Pa[0]=sigma;//sigma (nm)
     double sum=0.;
+    double rms=0;
     for(int ii=0;ii< Nw;ii++){
         RsRpEMA(ii, theta, phiS, 0);
-        rms=pow(RnsEMAu-MRh[ii][12],2.);
+        rms=rms+pow(RnsEMAu-MRh[ii][12],2.);
         MRh[ii][13]=RnsEMAu;
         sum=sum+MRh[ii][1]*MRh[ii][13];
     }
     Gplot(2,1,3,2,"R-nearspecular spectrum",13);
-    lineEdit_RMSfit->setText(QString::number(sqrt(rms),'e',4));
+    lineEdit_RMSfit->setText(QString::number(sqrt(rms)/double(Nw),'e',4));
     double meanVal=MeanComputing(13);
     lineEdit_meanRnsCalc->setText(QString::number(meanVal,'f',4));
 }
@@ -632,8 +659,8 @@ void SMEQ::fitRns(){
     int n=1;
     int m=Nw;
     int lwa=m*n+5*n+m;
-    int iwa[n];
-    double x[n],fvec[m],wa[lwa];
+    vector <int> iwa(n);
+    vector <double> x(n),fvec(m),wa(lwa);
     double tol=sqrt(dpmpar(1));
     thetaService=dSB_thetaRns->value();
     thetaService=thetaService/180.*Pig;//to be pass to fcn0
@@ -643,7 +670,7 @@ void SMEQ::fitRns(){
     x[0]=dSB_sigmaClean->value();//sigma
     if(m>0 && n>0){
         printf("Launch bestFit with Np=%d Ndata=%d data theta(rad)=%f phi(rad)=%f sigma(nm)=%f\n",n,m,thetaService,phiService,x[0]);
-        info=lmdif1(fcn0, &pTF2, m, n, x,fvec, tol, iwa, wa, lwa);
+        info=lmdif1(fcn0, &pTF2, m, n, x.data(),fvec.data(), tol, iwa.data(), wa.data(), lwa);
     }
     else{
         printf("Nmis=0 || m=0 || n=0 then RETURN!");
@@ -694,7 +721,7 @@ int fcn0(void *p, int m, int n, const double *x, double *fvec, int iflag){
     return(0);
 }
 
-void parabolicFit(int n){
+void parabolicFit(int n, double& A, double& B, double& C){
     long double matrix[3][4], ratio, a;
     long double sum_x=0.,sum_y=0.,sum_x2=0.,sum_x3=0.,sum_x4=0.,sum_xy=0.,sum_x2y=0.;
     int i, j , k;
@@ -743,12 +770,12 @@ void parabolicFit(int n){
 
 void spada(int ic, QString fileRh){
     int i,Ndata,Nflag,Nflag0,n,istep,iAlarmMIN=0,iAlarmMAX=0;
-    double RhExp[5000][5];
+    double A,B,C;
+    static double RhExp[5000][5];
     double Wa,Wb,WL,Yfin,DET;//err
     QString line,msg;
     QStringList list;
-    printf("spada ic=%d file=",ic);
-    cout<<fileRh.toStdString()<<"\n";
+    printf("spada ic=%d file=%s",ic,fileRh.toStdString().c_str());
     
     QFile fRh(fileRh);
     if (!fRh.open(QIODevice::ReadOnly | QIODevice::Text)){
@@ -766,7 +793,7 @@ void spada(int ic, QString fileRh){
     do{
         line = fRh.readLine();
         line=line.simplified();
-        list=line.split(QRegExp("\\s+"));
+        list = line.split(QRegularExpression("\\s+"));
         int nV=list.size();
         bool OK=false;
         if(nV==Narg){
@@ -792,26 +819,6 @@ void spada(int ic, QString fileRh){
         }
     }while(!stream.atEnd());
 
-//    for(i=1;i<=Nskip;i++){
-//        line = fRh.readLine();
-//        //      printf("line=%d: %s \n",i,line.toStdString().c_str());
-//    }
-//    if(ic == 3 || ic == 5){
-//        do {
-//            //if (!(iss >> a >> b)) { break; } // error
-//            stream >> RhExp[Ndata][0] >> RhExp[Ndata][1] >> RhExp[Ndata][2] >> err >> err;
-//            //        printf("%d %f %f %f \n", Ndata,RhExp[Ndata][0],RhExp[Ndata][1],RhExp[Ndata][2]);
-//            Ndata++;
-//        } while (!stream.atEnd());
-//    }
-//    else{
-//        do {
-//            stream >> RhExp[Ndata][0] >> RhExp[Ndata][1];
-//            //        printf("%d	%f	%f \n", Ndata,RhExp[Ndata][0],RhExp[Ndata][1]);
-//            Ndata++;
-//        } while (!stream.atEnd());
-//    }
-//    Ndata--;
     printf("Ndati=%d Nskip_line=%d\n",Ndata,Nskip);
     fRh.close();
     if(RhExp[0][0] < RhExp[Ndata-1][0]){
@@ -931,7 +938,7 @@ void spada(int ic, QString fileRh){
                 Yfin=A*WL*WL+B*WL+C;
             }
             if(n>2){
-                parabolicFit(n);
+                parabolicFit(n,A,B,C);
                 Yfin=A*WL*WL+B*WL+C;
             }
             for(int jj=0;jj<=n;jj++)
@@ -1255,15 +1262,15 @@ double FT(int ix,int i,double t){
 //**************************************************************
 
 void SMEQ::getFileRhSoiled(){
-    QString fileRns = QFileDialog::getOpenFileName(
+    QString fileRhSoil = QFileDialog::getOpenFileName(
         this,
-        "Choose a Rnear_specular exp. file",
+        "Choose a R-Hemispherical exp. file",
         pathroot+"/Spectra");
-    if(fileRns.isEmpty())
+    if(fileRhSoil.isEmpty())
         return;
-    lineEdit_RhSoiled -> setText(fileRns.section('/',-1));
-    spada(20,fileRns);
-    printf("Loaded %s\n",(fileRns.toStdString()).c_str());
+    lineEdit_RhSoiled -> setText(fileRhSoil.section('/',-1));
+    spada(20,fileRhSoil);
+    printf("Loaded %s\n",(fileRhSoil.toStdString()).c_str());
     double meanVal=MeanComputing(20);
     lineEdit_meanRhSoiled->setText(QString::number(meanVal,'f',4));
 
@@ -1418,8 +1425,8 @@ void SMEQ::bestFit(){
     }
     int m=Ndafit;
     int lwa=m*n+5*n+m;
-    int iwa[n];
-    double x[n],fvec[m],wa[lwa];
+    vector <int> iwa(n);
+    vector <double> x(n),fvec(m),wa(lwa);
     double tol=sqrt(dpmpar(1));
     int j=0;
     for(int i=0; i<7; i++){
@@ -1435,7 +1442,7 @@ void SMEQ::bestFit(){
     int info=0;
     if(m>0 && n>0 && Ndafit>0){
         printf("Launch bestFit with %d parameters and %d data .... ",n,m);
-        info=lmdif1(fcn, &pTF2, m, n, x,fvec, tol, iwa, wa, lwa);
+        info=lmdif1(fcn, &pTF2, m, n, x.data(),fvec.data(), tol, iwa.data(), wa.data(), lwa);
         InfoFit(info);
     }
     else{
@@ -1557,7 +1564,7 @@ int fcn(void *p, int m, int n, const double *x, double *fvec, int iflag){
     }
     else
         E=ParFit[6][0];
-    C=ParFit[7][0];
+    C=0;
     int iv=0;
     double WL;
     for(j=Nmin;j<=Nmax;j++){

@@ -48,6 +48,7 @@ This file is part of SMEQ.
 #include <qwt_plot_curve.h>
 #include <qwt_series_data.h>
 #include <gsl/gsl_math.h>
+#include <qwt_plot_picker.h>
  
 class SMEQ : public QWidget, private Ui::SMEQ_DLG
 {
@@ -63,6 +64,10 @@ private:
     QwtPlot* G1_Rh = nullptr;  // inizializzazione inline, C++11
     QwtPlot* G2_Rns = nullptr;  // inizializzazione inline, C++11
     QwtPlot* Gph = nullptr;  // inizializzazione inline, C++11
+    QwtPlotPicker* m_pickerG1 = nullptr;  // cursore con coordinate per G1
+    QwtPlotPicker* m_pickerG2 = nullptr;  // cursore con coordinate per G2
+    QwtPlotPicker* m_pickerGph = nullptr;  // cursore con coordinate per Gph
+
 
  
 public Q_SLOTS:
