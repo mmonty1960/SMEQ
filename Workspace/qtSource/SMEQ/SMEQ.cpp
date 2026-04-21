@@ -48,7 +48,6 @@ This file is part of SMEQ.
 #include <cminpack.h>
 #include <math.h>
 #include <stdio.h>
-#include <iostream>
 #include <cmath>
 #include <complex>
 #include <qwt_plot.h>
@@ -69,16 +68,22 @@ using namespace std;
 //global variables *******************************
 QColor myColor[7]={Qt::black,Qt::blue,Qt::cyan,Qt::green,Qt::magenta,Qt::red,Qt::yellow};
 QString pathroot;
+bool MeasIsLoaded[6]={false};
 int Nw=437;
 int iLock=0;
+double Theta[3];
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+const double PIG=M_PI;const double deg2rad=PIG/180.;
 static double xy[2][100];
 static double SUMw,d_layer,Nini,Kini,thetaService,phiService,TISc,Pa[5];
 static double Pig=acos(-1.);
-static double REMAs,REMAp,REMAu,RnsEMAs,RnsEMAp,RnsEMAu,R1s,R1p,nOl,kOl;
+static double REMAs,REMAp,REMAu,RnsEMAs,RnsEMAp,RnsEMAu,R1s,R1p;
 double ParFit[8][2];
-static double MRh[1000][30];
+static double MRh[500][35];
 /*
-  MRh[1000][30] main data storage matrix
+  MRh[1000][35] main data storage matrix
         [i][0] = wavelength (nm)
         [i][1] = weight (absolute)
         [i][2] = R_reference
@@ -91,23 +96,32 @@ static double MRh[1000][30];
         [i][9] = Runpolarised simulation
         [i][10] = Rh_clean experimental
         [i][11] = Rh_clean simulation
-        [i][12] = Rns_clean experimental
-        [i][13] = Rns_clean simulation
+        [i][12] = RnsNn_clean experimental
+        [i][13] = RnsNn_clean simulation
+        [i][14] = RnsOn_clean experimental
+        [i][15] = RnsOn clean simulation
+        [i][16] = RnsOn clean prediction
+        [i][17] = RnsOn soiled prediction
+
         ...
         [i][20] = Rh_soil experimental
         [i][21] = Rh_soil simulation
-        [i][22] = Rns_soil experimental
-        [i][23] = Rns_soil simulation
+        [i][22] = RnsNn_soil experimental
+        [i][23] = RnsNn_soil simulation
         [i][24]= (RhSoil-RhClean)/RhClean exp
         [i][25]= (RhSoil-RhClean)/RhClean calc
-        [i][26]= (RnsSoil-RnsClean)/RnsClean exp
-        [i][27]= (RnsSoil-RnsClean)/RnsClean calc
-        [i][28]= RnsSoiledPrediction
+        [i][26]= (RnsNn_Soil-RnsNn_clean)/RnsNn_clean exp
+        [i][27]= (RnsNn_Soil-RnsNn_clean)/RnsNn_clean calc
+        [i][28]= (RnsNn_Soil-RnsNn_clean)/RnsNn_clean prediction
+        [i][29] = RnsOn_soil experimental
+        [i][30] = RnsOn_soil simulation
+        [i][31]= (RnsOn_Soil-RnsOn_clean)/RnsOn_clean exp
+        [i][32]= (RnsOn_Soil-RnsOn_clean)/RnsOn_clean calc
 */
 
 // funzioni invocate
 void parabolicFit(int n,double& A, double& B, double& C);
-void spada(int column, QString fileRh);
+int spada(int column, QString fileRh);
 void RsRpEMA(int iWL, double theta, double phiS, int iTISopt);
 void RsRp(complex<double> N1, complex<double> N2, complex<double> theta1,
           double& Rs,double& Rp, complex<double>& theta2);
@@ -134,9 +148,11 @@ SMEQ::SMEQ(QWidget *parent){
     // signals/slots mechanism in action
     connect(comboBox_standard,    SIGNAL(currentIndexChanged(int)), this, SLOT(setRange()));
     connect(pushButton_loadRh,    SIGNAL(clicked()), this, SLOT( getFileRh() )     );
-    connect(pushButton_loadRns,   SIGNAL(clicked()), this, SLOT( getFileRns() )    );
+    connect(pushButton_loadRnsNn,   SIGNAL(clicked()), this, SLOT( getFileRnsNn() )    );
+    connect(pushButton_loadRnsOn,   SIGNAL(clicked()), this, SLOT( getFileRnsOn() )    );
     connect(pushButton_loadRhSoiled,    SIGNAL(clicked()), this, SLOT( getFileRhSoiled() )     );
-    connect(pushButton_loadRnsSoiled,   SIGNAL(clicked()), this, SLOT( getFileRnsSoiled() )    );
+    connect(pushButton_loadRnsNnSoiled,   SIGNAL(clicked()), this, SLOT( getFileRnsSoiled() )    );
+    connect(pushButton_loadRnsOnSoiled,   SIGNAL(clicked()), this, SLOT( getFileRnsOnSoiled() )    );
     connect(pushButton_PlotRns,   SIGNAL(clicked()), this, SLOT( PlotRns() )       );
     connect(comboBox_nkOL,        SIGNAL(currentIndexChanged(int)), this, SLOT( getFileNKover() ) );
     connect(comboBox_nkMetal,     SIGNAL(currentIndexChanged(int)), this, SLOT( getFileNKmetal()) );
@@ -144,9 +160,9 @@ SMEQ::SMEQ(QWidget *parent){
     connect(pushButton_check,     SIGNAL(clicked()), this, SLOT( EMAcheck() )      );
     connect(pushButton_fitRns,    SIGNAL(clicked()), this, SLOT( fitRns() )        );
     connect(pushButton_plotNormLoss,SIGNAL(clicked()), this, SLOT(plotNRloss() )   );
-    connect(pushButton_BF,SIGNAL(clicked()), this, SLOT(bestFit() )   );
+    connect(pushButton_BF,        SIGNAL(clicked()), this, SLOT(bestFit() )   );
     connect(pushButton_RnsPrediction,SIGNAL(clicked()), this, SLOT(RnsPrediction() )   );
-    connect(pushButton_plotRh,    SIGNAL(clicked()), this, SLOT(PlotRh() )   );
+//    connect(pushButton_plotRh,    SIGNAL(clicked()), this, SLOT(PlotRh() )   );
     connect(pushButton_PlotRns2,  SIGNAL(clicked()), this, SLOT(PlotRns2() )   );
     connect(pushButton_credits,   SIGNAL(clicked()), this, SLOT(credits() )   );
 
@@ -230,7 +246,7 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
     //            1->DotLine
     //            2->DashLine
 
-    printf("->Gplot: iGraph=%d iColor=%d iStyle=%d iQuantity=%d Ndata=%d\n",iGraph,iColor,iStyle,iQ,Nw);
+    printf("->Gplot: iGraph=%d iRD=%d iColor=%d iStyle=%d iQuantity=%d Ndata=%d\n",iGraph,iRD,iColor,iStyle,iQ,Nw);
 
     vector <double> Xp(Nw),Yp(Nw);
     for(int ii=0;ii< Nw;ii++){
@@ -276,14 +292,15 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
             G1_Rh->raise();
             G1_Rh->activateWindow();
         }
-        if(iRD==0)
+        if(iRD==0){
             G1_Rh->detachItems(QwtPlotItem::Rtti_PlotCurve, true);
-        G1_Rh -> setTitle(title);
-        G1_Rh -> setAxisTitle(0,"Rhemispherical");
-        G1_Rh -> setAxisTitle(2,"wavelength (nm)");
-        G1_Rh -> setAxisScale(2,Xp[0],Xp[Nw-1],0.);
+            G1_Rh -> setTitle(title);
+            G1_Rh -> setAxisTitle(0,"Rhemispherical");
+            G1_Rh -> setAxisTitle(2,"wavelength (nm)");
+            G1_Rh -> setAxisScale(2,Xp[0],Xp[Nw-1],0.);
+            grid->attach(G1_Rh);
+        }
         curve1->attach(G1_Rh);
-        grid->attach(G1_Rh);
         G1_Rh->replot();
         G1_Rh->show();
     }
@@ -311,14 +328,15 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
             G2_Rns->raise();
             G2_Rns->activateWindow();
         }
-        if(iRD==0)
+        if(iRD==0){
             G2_Rns->detachItems(QwtPlotItem::Rtti_PlotCurve, true);
-        G2_Rns -> setTitle("R-nearspecular spectrum");
-        G2_Rns -> setAxisTitle(0,"Reflectance");
-        G2_Rns -> setAxisTitle(2,"Wavelength (nm)");
-        G2_Rns -> setAxisScale(2,Xp[0],Xp[Nw-1],0.);
+            G2_Rns -> setTitle("R-nearspecular spectrum");
+            G2_Rns -> setAxisTitle(0,"Reflectance");
+            G2_Rns -> setAxisTitle(2,"Wavelength (nm)");
+            G2_Rns -> setAxisScale(2,Xp[0],Xp[Nw-1],0.);
+            grid->attach(G2_Rns);
+        }
         curve1->attach(G2_Rns);
-        grid->attach(G2_Rns);
         G2_Rns->replot();
         G2_Rns->show();
     }
@@ -346,17 +364,18 @@ void SMEQ::Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int
             Gph->raise();
             Gph->activateWindow();
         }
-        if(iRD==0)
+        if(iRD==0){
             Gph->detachItems(QwtPlotItem::Rtti_PlotCurve, true);
-        double Ymax=doubleSpinBox_Ymax->value();
-        double Ymin=doubleSpinBox_Ymin->value();
-        Gph -> setTitle("Normalized-reflectance loss");
-        Gph -> setAxisTitle(0,"norm. loss");
-        Gph -> setAxisTitle(2,"Wavelength (nm)");
-        Gph -> setAxisScale(2,Xp[0],Xp[Nw-1],0.);
-        Gph -> setAxisScale(0,Ymin,Ymax);
+            double Ymax=doubleSpinBox_Ymax->value();
+            double Ymin=doubleSpinBox_Ymin->value();
+            Gph -> setTitle("Normalized-reflectance loss");
+            Gph -> setAxisTitle(0,"norm. loss");
+            Gph -> setAxisTitle(2,"Wavelength (nm)");
+            Gph -> setAxisScale(2,Xp[0],Xp[Nw-1],0.);
+            Gph -> setAxisScale(0,Ymin,Ymax);
+            grid->attach(Gph);
+        }
         curve1->attach(Gph);
-        grid->attach(Gph);
         Gph->replot();
         Gph->show();
     }
@@ -445,13 +464,22 @@ void SMEQ::getFileRh(){
                 pathroot+"/Spectra");
     if(fileRh.isEmpty())
         return;
-    lineEditRh -> setText(fileRh.section('/',-1));
-    spada(10,fileRh);
-    printf("Loaded %s\n",(fileRh.toStdString()).c_str());
-    double meanVal=MeanComputing(10);
-    lineEdit_meanRh->setText(QString::number(meanVal,'f',4));
-    PlotRh();
+    lineEdit_Rh -> setText(fileRh.section('/',-1));
+    int ierr=spada(10,fileRh);
+    if(ierr==0){
+        MeasIsLoaded[0]=true;
+        printf("Loaded %s\n",(fileRh.toStdString()).c_str());
+        Theta[0]=dSB_thetaRh->value();
+        lineEdit_thetaHemi->setText(QString::number(Theta[0],'f',1));
+        Theta[0]=Theta[0]*deg2rad;
+        double meanVal=MeanComputing(10);
+        lineEdit_meanRh->setText(QString::number(meanVal,'f',4));
+        PlotRh();
+    }
+    else
+        MeasIsLoaded[0]=false;
 }
+
 
 void SMEQ::PlotRh(){
     //Plot Rh exp
@@ -459,16 +487,16 @@ void SMEQ::PlotRh(){
 }
 
 
-int SMEQ::nkCheck(){
+bool SMEQ::nkCheck(){
     int iNKol=comboBox_nkOL->currentIndex();
     int iNKmetal=comboBox_nkMetal->currentIndex();
     if(iNKol<0 || iNKmetal<0){
         QMessageBox msgBox;
         msgBox.setText("Please select nk ov over-layer and metallic-layer");
         msgBox.exec();
-        return(-1);
+        return(false);
     }
-    return(0);
+    return(true);
 }
 
 
@@ -499,12 +527,10 @@ void SMEQ::getFileNKmetal(){
 
 
 void SMEQ::EMAcheck(){
-    int iOK=nkCheck();
-    if(iOK<0)
+    if(!MeasIsLoaded[0] || !nkCheck())
         return;
+
     double term,Drms,Dmin,Dmax;
-    double theta=dSB_thetaRh->value();
-    theta=theta/180.*Pig;
 
     d_layer=dSBdoverlayer -> value();
     d_layer=d_layer*1.e+06;//mm -> nm
@@ -518,7 +544,7 @@ void SMEQ::EMAcheck(){
 
     //Plot Rh EMA
     for(int ii=0;ii< Nw;ii++){
-        RsRpEMA(ii,theta,0.,-1);
+        RsRpEMA(ii,Theta[0],0.,-1);
         MRh[ii][11]=REMAu;
         term=REMAu-MRh[ii][10];
         Dmin=min(term,Dmin);
@@ -536,14 +562,11 @@ void SMEQ::EMAcheck(){
 
 
 void SMEQ::EMA(){
-    int iOK=nkCheck();
-    if(iOK<0)
+    if(!MeasIsLoaded[0] || !nkCheck())
         return;
+
     int ix,iAlarm=0;
     double SUMwRh,term,Drms,Dmin,Dmax;
-    double thetaRh=dSB_thetaRh ->value();
-    thetaRh=thetaRh/180.*Pig;
-    thetaService=thetaRh;//to be pass to FT
     QString fileMatNK=pathroot+"/MatNK.txt";
     QFile fileMnk(fileMatNK);
     fileMnk.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -551,6 +574,7 @@ void SMEQ::EMA(){
 
     d_layer=dSBdoverlayer -> value();
     d_layer=d_layer*1.e+06;//mm -> nm
+    thetaService=Theta[0];
 
     ix=comboBox_ix -> currentIndex();
     if(ix==0)
@@ -570,7 +594,7 @@ void SMEQ::EMA(){
 
     // Plot initial simulated Rh
     for(int ii=0;ii< Nw;ii++){
-        RsRpEMA(ii,thetaRh,0.,-1);
+        RsRpEMA(ii,Theta[0],0.,-1);
         MRh[ii][11]=REMAu;
     }
     Gplot(1,1,3,2,"EMA computing",11);
@@ -578,7 +602,7 @@ void SMEQ::EMA(){
     SUMwRh=0.;
     for(int i=0;i<Nw;i++){
         FindRoot(ix,i,0);
-        RsRpEMA(i,thetaRh,0.,-1);
+        RsRpEMA(i,Theta[0],0.,-1);
         //    printf("i=%d WL=%f Rs=%f Rp=%f\n",i,MRh[i][0],REMAs,REMAp);
         MRh[i][7]=REMAs;
         MRh[i][8]=REMAp;
@@ -601,69 +625,134 @@ void SMEQ::EMA(){
     lineEdit_PV -> setText(QString::number(Dmax-Dmin));
     //PLOT final simulated Rh
     for(int ii=0;ii< Nw;ii++){
-        RsRpEMA(ii,thetaRh,0.,-1);
+        RsRpEMA(ii,Theta[0],0.,-1);
         MRh[ii][11]=REMAu;
     }
     Gplot(1,1,5,2,"EMA computing",11);
 }
 
 
-void SMEQ::getFileRns(){
+void SMEQ::getFileRnsNn(){
     QString fileRns = QFileDialog::getOpenFileName(
         this,
-        "Choose a Rnear_specular exp. file",
+        "Choose a Rnearspecular_nearnormal exp. file",
         pathroot+"/Spectra");
     if(fileRns.isEmpty())
         return;
-    lineEdit_Rns -> setText(fileRns.section('/',-1));
-    spada(12,fileRns);
+    lineEdit_RnsNn -> setText(fileRns.section('/',-1));
+    int ierr=spada(12,fileRns);
+    if(!(ierr==0)){
+        MeasIsLoaded[1]=false;
+        return;
+    }
+    MeasIsLoaded[1]=true;
     printf("Loaded %s\n",(fileRns.toStdString()).c_str());
+    Theta[1]=dSB_thetaRnsNn->value();
+    lineEdit_thetaNearn->setText(QString::number(Theta[1],'f',1));
+    Theta[1]=Theta[1]*deg2rad;
     double meanVal=MeanComputing(12);
-    lineEdit_meanRnsExp->setText(QString::number(meanVal,'f',4));
+    lineEdit_meanRnsNn->setText(QString::number(meanVal,'f',4));
     PlotRns();
 }
 
 
+void SMEQ::getFileRnsOn(){
+    QString fileRns = QFileDialog::getOpenFileName(
+        this,
+        "Choose a Rnearspecular_offnormal exp. file",
+        pathroot+"/Spectra");
+    if(fileRns.isEmpty())
+        return;
+    lineEdit_RnsOn -> setText(fileRns.section('/',-1));
+    int ierr=spada(14,fileRns);
+    if(!(ierr==0)){
+        MeasIsLoaded[2]=false;
+        return;
+    }
+    MeasIsLoaded[2]=true;
+    printf("Loaded %s\n",(fileRns.toStdString()).c_str());
+    Theta[2]=dSB_thetaRnsOn->value();
+    lineEdit_thetaOffn->setText(QString::number(Theta[2],'f',1));
+    Theta[2]=Theta[2]*deg2rad;
+    double meanVal=MeanComputing(14);
+    lineEdit_meanRnsOn->setText(QString::number(meanVal,'f',4));
+    PlotRns();
+}
+
 void SMEQ::PlotRns(){
     //plot of Rns experimental and computed
     //plot Rns exp
-    Gplot(2,0,0,0,"R-nearspecular spectrum",12);
+    if(MeasIsLoaded[1])
+        Gplot(2,0,0,0,"R-nearspecular spectrum",12);
+    if(MeasIsLoaded[2])
+        Gplot(2,0,0,0,"R-nearspecular spectrum",14);
 
     //plot Rns computed by EMA4SM
-    double theta=dSB_thetaRns->value();
-    theta=theta/180.*Pig;
     double phiS=dSB_Phi->value();
     phiS=phiS/1000;
     double sigma=dSB_sigmaClean->value();
     TISc=doubleSpinBox_TIS->value();
-    printf("->PlotRns computing with theta(rad)=%f phiS(rad)=%f sigma(nm)=%f\n",theta,phiS,sigma);
+    printf("->PlotRns computing with theta_nn(rad)=%f theta_on(rad)=%f phiS(rad)=%f sigma(nm)=%f\n",Theta[1],Theta[2],phiS,sigma);
     Pa[0]=sigma;//sigma (nm)
-    double sum=0.;
-    double rms=0;
+    double rms1=0.;
+    double rms2=0;
     for(int ii=0;ii< Nw;ii++){
-        RsRpEMA(ii, theta, phiS, 0);
-        rms=rms+pow(RnsEMAu-MRh[ii][12],2.);
-        MRh[ii][13]=RnsEMAu;
-        sum=sum+MRh[ii][1]*MRh[ii][13];
+        if(MeasIsLoaded[1]){
+            RsRpEMA(ii, Theta[1], phiS, 0);
+            rms1=rms1+pow(RnsEMAu-MRh[ii][12],2.);
+            MRh[ii][13]=RnsEMAu;
+        }
+        if(MeasIsLoaded[2]){
+            RsRpEMA(ii, Theta[2], phiS, 0);
+            rms2=rms2+pow(RnsEMAu-MRh[ii][14],2.);
+            MRh[ii][15]=RnsEMAu;
+        }
     }
-    Gplot(2,1,3,2,"R-nearspecular spectrum",13);
-    lineEdit_RMSfit->setText(QString::number(sqrt(rms)/double(Nw),'e',4));
-    double meanVal=MeanComputing(13);
-    lineEdit_meanRnsCalc->setText(QString::number(meanVal,'f',4));
+    if(MeasIsLoaded[1]){
+        Gplot(2,1,3,2,"R-nearspecular spectrum",13);
+        double meanVal1=MeanComputing(13);
+        lineEdit_swRnsNnCalc->setText(QString::number(meanVal1,'f',4));
+        lineEdit_RMS_RnsNnCalc->setText(QString::number(sqrt(rms1/Nw),'e',4));
+    }
+    if(MeasIsLoaded[2]){
+        Gplot(2,1,3,2,"R-nearspecular spectrum",15);
+        double meanVal1=MeanComputing(15);
+        lineEdit_swRnsOnCalc->setText(QString::number(meanVal1,'f',4));
+        lineEdit_RMS_RnsOnCalc->setText(QString::number(sqrt(rms2/Nw),'e',4));
+    }
 }
 
 
 
 void SMEQ::fitRns(){
+    if(!MeasIsLoaded[1] || !MeasIsLoaded[2])
+        return;
+    double WLmin=doubleSpinBox_Xmin->value();
+    double WLmax=doubleSpinBox_Xmax->value();
+    int Ndafit=0;
+    int Nmin=Nw;
+    int Nmax=0;
+    for(int i=0;i<Nw;i++){
+        if(MRh[i][0]>=WLmin && MRh[i][0]<=WLmax){
+            Ndafit++;
+            Nmin=min(Nmin,i);
+            Nmax=max(Nmax,i);
+        }
+    }
+    if(MeasIsLoaded[1]&&MeasIsLoaded[2])
+        Ndafit=Ndafit*2;
+    pTF2[0].NdatFit=Ndafit;
+    pTF2[0].Nmin=Nmin;
+    pTF2[0].Nmax=Nmax;
+    lineEdit_Ndat->setText(QString::number(Ndafit));
+    printf("Ndafit= %d Nmin= %d Nmax= %d\n",Ndafit,Nmin,Nmax);
     int info;
     int n=1;
-    int m=Nw;
+    int m=Ndafit;
     int lwa=m*n+5*n+m;
     vector <int> iwa(n);
     vector <double> x(n),fvec(m),wa(lwa);
     double tol=sqrt(dpmpar(1));
-    thetaService=dSB_thetaRns->value();
-    thetaService=thetaService/180.*Pig;//to be pass to fcn0
     phiService=dSB_Phi->value();
     phiService=phiService/1000;//to be pass to fcn0
     TISc=doubleSpinBox_TIS->value();
@@ -707,17 +796,27 @@ void SMEQ::InfoFit(int info){
 
 int fcn0(void *p, int m, int n, const double *x, double *fvec, int iflag){
     //fit Rnearspecular with EMA4SM
+    struct pointToFit2 *pTF2 = (struct pointToFit2 *)p;
+    int Nmin=pTF2[0].Nmin;
+    int Nmax=pTF2[0].Nmax;
     int iv=0;
     Pa[0]=x[0];
     double chi2=0.;
-    for(int j=0;j<Nw;j++){
-        RsRpEMA(j, thetaService, phiService, 0);
-        fvec[iv]=RnsEMAu-MRh[j][12];
-        chi2=chi2+fvec[iv]*fvec[iv];
-        //printf("RnsEMAu=%f RnsExp=%f fvec[iv]=%f\n",RnsEMAu,MRh[j][12],fvec[iv]);
-        iv++;
+    for(int j=Nmin;j<Nmax;j++){
+        if(MeasIsLoaded[1]){
+            RsRpEMA(j, Theta[1], phiService, 0);
+            fvec[iv]=RnsEMAu-MRh[j][12];
+            chi2=chi2+fvec[iv]*fvec[iv];
+            iv++;
+        }
+        if(MeasIsLoaded[2]){
+            RsRpEMA(j, Theta[2], phiService, 0);
+            fvec[iv]=RnsEMAu-MRh[j][14];
+            chi2=chi2+fvec[iv]*fvec[iv];
+            iv++;
+        }
     }
-    printf("\t->fcn0: sigma=%f chi2=%f\n",Pa[0],chi2/Nw);
+    //printf("\t->fcn0: sigma=%f chi2=%f\n",Pa[0],chi2/Nw);
     return(0);
 }
 
@@ -768,10 +867,11 @@ void parabolicFit(int n, double& A, double& B, double& C){
 }
 
 
-void spada(int ic, QString fileRh){
+int spada(int ic, QString fileRh){
     int i,Ndata,Nflag,Nflag0,n,istep,iAlarmMIN=0,iAlarmMAX=0;
     double A,B,C;
-    static double RhExp[5000][5];
+    std::vector<std::array<double,3>> RhExp;
+    RhExp.reserve(1000);
     double Wa,Wb,WL,Yfin,DET;//err
     QString line,msg;
     QStringList list;
@@ -780,20 +880,24 @@ void spada(int ic, QString fileRh){
     QFile fRh(fileRh);
     if (!fRh.open(QIODevice::ReadOnly | QIODevice::Text)){
         printf("ERROR opening %s\n",fileRh.toStdString().c_str());
-        return;
+        return(1);
     }
     QTextStream stream ( &fRh );
     Ndata=0;
     double val[5];
     int Narg=2;
-    if(ic == 3 || ic == 5)
+    int jmax=1;
+    if(ic == 3 || ic == 5){
+        jmax=2;
         Narg=5;
+    }
     int Nskip=0;
     printf("\tNarg=%d\n",Narg);
+    static const QRegularExpression re("\\s+");
     do{
         line = fRh.readLine();
         line=line.simplified();
-        list = line.split(QRegularExpression("\\s+"));
+        list = line.split(re);
         int nV=list.size();
         bool OK=false;
         if(nV==Narg){
@@ -803,12 +907,12 @@ void spada(int ic, QString fileRh){
                     index=nV;
             }
             if(OK){
-                for (int k=0;k<nV;k++){
-                    RhExp[Ndata][k]=val[k];
-                    //cout<<val[k]<<"\t";
-                }
-                //cout<<"\n";
-                Ndata++;
+                std::array<double,3> row;
+                row.fill(0.0); // azzera i campi non usati (quando nV<5)
+                for(int k=0;k<=jmax;k++)
+                    row[k]=val[k];
+                RhExp.push_back(row);
+                //qDebug("val[0]=%f val[1]=%f",val[0],val[1]);
             }
             else
                 Nskip++;
@@ -818,7 +922,7 @@ void spada(int ic, QString fileRh){
             //cout<<"   ->>>>> "<<nV<<"\t"<<OK<<"\n";
         }
     }while(!stream.atEnd());
-
+    Ndata = static_cast<int>(RhExp.size());
     printf("Ndati=%d Nskip_line=%d\n",Ndata,Nskip);
     fRh.close();
     if(RhExp[0][0] < RhExp[Ndata-1][0]){
@@ -838,18 +942,18 @@ void spada(int ic, QString fileRh){
         QMessageBox msgBox;
         msgBox.setText(msg);
         msgBox.exec();
-        return;
+        return(2);
     }
     if(iAlarmMAX!=0){
         msg="WLmax < "+QString::number(MRh[Nw-1][0]);
         QMessageBox msgBox;
         msgBox.setText(msg);
         msgBox.exec();
-        return;
+        return(3);
     }
     // resampling RhExp like weight
-    int jmax=1;
-    if(ic==3 || ic==5) jmax=2;
+    //int jmax=1;
+    //if(ic==3 || ic==5) jmax=2;
     for(int j=1;j<=jmax;j++){
         Nflag=Nflag0;
         for(i=0;i<Nw;i++){
@@ -870,8 +974,9 @@ void spada(int ic, QString fileRh){
                     xy[1][n]=RhExp[Nflag][j];
                 }
                 Nflag=Nflag+istep;
-            } while(RhExp[Nflag][0] <= Wb && Nflag>=0 && Nflag<= Ndata-1);
-            //      printf("Wa=%f Wb=%f n=%d \n",Wa,Wb,n);
+            } while((Nflag>=0 && Nflag<= Ndata-1) && RhExp[Nflag][0] <= Wb);
+            //qDebug("Wa=%f Wb=%f n=%d",Wa,Wb,n);
+            //fflush(stdout);
             Nflag=Nflag-istep;
             Yfin=0.;
             if(n==-1){
@@ -884,17 +989,19 @@ void spada(int ic, QString fileRh){
                 xy[1][n]=RhExp[Nflag][j];
             }
             if(n==0){
-                //	printf("Nflag=%d\n",Nflag);
+                //qDebug("Nflag=%d",Nflag);
                 if(xy[0][n]<WL){
                     if(Nflag+istep >=0 && Nflag+istep <= Ndata-1){
-                        //	    printf("caso 1\n");
+                        // qDebug("caso 1");
+                        // fflush(stdout);
                         Nflag=Nflag+istep;
                         n=1;
                         xy[0][n]=RhExp[Nflag][0];
                         xy[1][n]=RhExp[Nflag][j];
                     }
                     else{
-                        //	    printf("caso 2\n");
+                        // qDebug("caso 2");
+                        // fflush(stdout);
                         n=0;
                         xy[0][n]=RhExp[Nflag-istep][0];
                         xy[1][n]=RhExp[Nflag-istep][j];
@@ -905,7 +1012,8 @@ void spada(int ic, QString fileRh){
                 }
                 else{
                     if(Nflag-istep >=0 && Nflag-istep <= Ndata-1){
-                        //	    printf("caso 3\n");
+                        // qDebug("caso 3");
+                        // fflush(stdout);
                         n=0;
                         xy[0][n]=RhExp[Nflag-istep][0];
                         xy[1][n]=RhExp[Nflag-istep][j];
@@ -914,8 +1022,9 @@ void spada(int ic, QString fileRh){
                         xy[1][n]=RhExp[Nflag][j];
                     }
                     else{
-                        //	    printf("caso 4\n");
-                        Nflag=Nflag+1;
+                        // qDebug("caso 4");
+                        // fflush(stdout);
+                        Nflag=Nflag+istep;
                         n=1;
                         xy[0][n]=RhExp[Nflag][0];
                         xy[1][n]=RhExp[Nflag][j];
@@ -941,26 +1050,15 @@ void spada(int ic, QString fileRh){
                 parabolicFit(n,A,B,C);
                 Yfin=A*WL*WL+B*WL+C;
             }
-            for(int jj=0;jj<=n;jj++)
-                // 	printf("%f %f\n",xy[0][jj],xy[1][jj]);
-                //      if(n>=2) printf("A=%f B=%f C=%f\n",A,B,C);
-                if(ic==10)
-                    MRh[i][ic]=Yfin*MRh[i][2];
-                else
-                    MRh[i][ic+j-1]=Yfin;
-            //      printf("WL=%f MRh[%d][%d]=%f \n",MRh[i][0],i,ic,MRh[i][ic+j-1]);
-            //      char ch;
-            //       if(ic==3 || ic==5){
-            // 	std::cout << "To continue press a key & enter: ";
-            // 	std::cin  >> ch;
-            //       }
+            MRh[i][ic+j-1]=Yfin;
         }
     }
+    return(0);
 }
 
 
 void RsRpEMA(int iWL, double theta, double phiS, int iTISopt){
-    if(iWL==10) printf("->RsRpEMA: iWL=%d theta=%f phiS=%f iTISopt=%d\n",iWL,theta,phiS,iTISopt);
+    //if(iWL==10) printf("->RsRpEMA: iWL=%d theta=%f phiS=%f iTISopt=%d\n",iWL,theta,phiS,iTISopt);
     double R2s,R2p,alpha,ThetaOL,ratPhi,phiP,Ratio=1.;
     complex<double> theta1,theta2;
     complex<double> N0(1.0,0.0);//air
@@ -972,16 +1070,17 @@ void RsRpEMA(int iWL, double theta, double phiS, int iTISopt){
     phiP=ratPhi*phiS;
     complex<double> N2(MRh[iWL][5],-MRh[iWL][6]);//metallic-layer
     RsRp(N1,N2,theta1,R2s,R2p,theta2);
-    if(iTISopt==0){
+    if(iTISopt==0){//EMA4SM
         double SigmaS=FunFit(phiS*1000.);
         double SigmaP=FunFit(phiP*1000.);
+        //if(iWL==50) qDebug("ratPhi=%f SigmaS=%f SigmaP=%f",ratPhi,SigmaS,SigmaP);
         double TISp=exp(-pow(4.*Pig*SigmaP*cos(ThetaOL)/MRh[iWL][0]*MRh[iWL][3],TISc));
         double TISs=exp(-pow(4.*Pig*SigmaS*cos(ThetaOL)/MRh[iWL][0]*MRh[iWL][3],2.));
         ratPhi=pow(ratPhi,2.);//pow(phiP/phiS,2.)
         Ratio=ratPhi*TISs+(1.-ratPhi)*(TISs+TISp)/2.;
         Ratio=ratPhi*TISs+(1.-ratPhi)*sqrt(TISs*TISp);
-        if(iWL==10) printf("iWL=%d theta=%f phiS=%f phiP=%f SigmaS=%f SigmaP=%f TISs=%f TISp=%f ratPhi=%f Ratio=%f\n",
-               iWL,theta,phiS,phiP,SigmaS,SigmaP,TISs,TISp,ratPhi,Ratio);
+        // if(iWL==10) printf("iWL=%d theta=%f phiS=%f phiP=%f SigmaS=%f SigmaP=%f TISs=%f TISp=%f ratPhi=%f Ratio=%f\n",
+        //        iWL,theta,phiS,phiP,SigmaS,SigmaP,TISs,TISp,ratPhi,Ratio);
     }
     else if(iTISopt==1){
         double lam=MRh[iWL][0]/MRh[iWL][3];
@@ -1018,8 +1117,8 @@ void RsRpEMA(int iWL, double theta, double phiS, int iTISopt){
     RnsEMAp=R1p+pow(1.0-R1p,2.0)*R2p*Ratio/(exp(2.*alpha*d_layer)-R1p*R2p*Ratio);
     REMAu=0.5*(REMAs+REMAp);
     RnsEMAu=0.5*(RnsEMAs+RnsEMAp);
-    if(iWL==10) printf("\tREMAs=%f REMAp=%f REMAu=%f\n",REMAs,REMAp,REMAu);
-    if(iWL==10) printf("\tRnsEMAs=%f RnsEMAp=%f RnsEMAu=%f\n",RnsEMAs,RnsEMAp,RnsEMAu);
+    //if(iWL==10) printf("\tREMAs=%f REMAp=%f REMAu=%f\n",REMAs,REMAp,REMAu);
+    //if(iWL==10) printf("\tRnsEMAs=%f RnsEMAp=%f RnsEMAu=%f\n",RnsEMAs,RnsEMAp,RnsEMAu);
 }
 
 
@@ -1269,7 +1368,12 @@ void SMEQ::getFileRhSoiled(){
     if(fileRhSoil.isEmpty())
         return;
     lineEdit_RhSoiled -> setText(fileRhSoil.section('/',-1));
-    spada(20,fileRhSoil);
+    int ierr=spada(20,fileRhSoil);
+    if(!(ierr==0)){
+        MeasIsLoaded[3]=false;
+        return;
+    }
+    MeasIsLoaded[3]=true;
     printf("Loaded %s\n",(fileRhSoil.toStdString()).c_str());
     double meanVal=MeanComputing(20);
     lineEdit_meanRhSoiled->setText(QString::number(meanVal,'f',4));
@@ -1291,11 +1395,16 @@ void SMEQ::getFileRnsSoiled(){
         pathroot+"/Spectra");
     if(fileRns.isEmpty())
         return;
-    lineEdit_RnsSoiled -> setText(fileRns.section('/',-1));
-    spada(22,fileRns);
+    lineEdit_RnsNnSoiled -> setText(fileRns.section('/',-1));
+    int ierr=spada(22,fileRns);
+    if(!(ierr==0)){
+        MeasIsLoaded[4]=false;
+        return;
+    }
+    MeasIsLoaded[4]=true;
     printf("Loaded %s\n",(fileRns.toStdString()).c_str());
     double meanVal=MeanComputing(22);
-    lineEdit_meanRnsSoiled->setText(QString::number(meanVal,'f',4));
+    lineEdit_meanRnsNnSoiled->setText(QString::number(meanVal,'f',4));
 
     //Plot Rns_soiled
     for(int ii=0;ii< Nw;ii++){
@@ -1304,26 +1413,70 @@ void SMEQ::getFileRnsSoiled(){
     Gplot(2,1,5,0,"R-nearspecular spectrum",22);
 }
 
+void SMEQ::getFileRnsOnSoiled(){
+    QString fileRns = QFileDialog::getOpenFileName(
+        this,
+        "Choose a Rnear_specular exp. file",
+        pathroot+"/Spectra");
+    if(fileRns.isEmpty())
+        return;
+    lineEdit_RnsOnSoiled -> setText(fileRns.section('/',-1));
+    int ierr=spada(29,fileRns);
+    if(!(ierr==0)){
+        MeasIsLoaded[5]=false;
+        return;
+    }
+    MeasIsLoaded[5]=true;
+    printf("Loaded %s\n",(fileRns.toStdString()).c_str());
+    double meanVal=MeanComputing(29);
+    lineEdit_meanRnsOnSoiled->setText(QString::number(meanVal,'f',4));
+
+    //Plot Rns_soiled
+    for(int ii=0;ii< Nw;ii++){
+        MRh[ii][31]=(MRh[ii][29]-MRh[ii][14])/MRh[ii][14];
+    }
+    Gplot(2,1,5,0,"R-nearspecular spectrum",29);
+}
+
 void SMEQ::PlotRns2(){
     PlotRns();
-    Gplot(2,1,5,0,"R-nearspecular spectrum",22);
+    if(MeasIsLoaded[4])
+        Gplot(2,1,5,0,"R-nearspecular spectrum",22);
+    if(MeasIsLoaded[5])
+        Gplot(2,1,5,0,"R-nearspecular spectrum",29);
 }
 
 void SMEQ::plotNRloss(){
+    //Plot experimental normalized loss
+    if(MeasIsLoaded[3])//NormRh_loss
+        Gplot(3,0,0,0,"Norm-Reflectance loss",24);
+    if(MeasIsLoaded[4])//NormRnsNn_loss exp
+        Gplot(3,1,5,0,"Norm-Reflectance loss",26);
+    if(MeasIsLoaded[5])//NormRnsOn_loss
+        Gplot(3,1,5,0,"Norm-Reflectance loss",31);
 
-    //Plot NormRh_loss
-    Gplot(3,0,0,0,"Norm-Reflectance loss",24);
-
-    //Plot NormRns_loss
-    Gplot(3,1,1,0,"Norm-Reflectance loss",26);
-
-    //Plot computed NormRns_loss
+    //Plot computed normalized loss
     calcPlot();
 }
 
 void SMEQ::calcPlot(){
     if(iLock!=0)
         return;
+
+    //fit range
+    double WLmin=doubleSpinBox_Xmin->value();
+    double WLmax=doubleSpinBox_Xmax->value();
+    int Ndafit=0;
+    int Nmin=Nw;
+    int Nmax=0;
+    for(int i=0;i<Nw;i++){
+        if(MRh[i][0]>=WLmin && MRh[i][0]<=WLmax){
+            Ndafit++;
+            Nmin=min(Nmin,i);
+            Nmax=max(Nmax,i);
+        }
+    }
+
     //model
     double S=doubleSpinBox_S->value();
     double sigmaSoil=doubleSpinBox_sigmaSoil->value();
@@ -1335,30 +1488,40 @@ void SMEQ::calcPlot(){
     double E=doubleSpinBox_E->value();
     //double Ymin=doubleSpinBox_Ymin->value();
     //double Ymax=doubleSpinBox_Ymax->value();
-    double WLmin=doubleSpinBox_Xmin->value();
-    double WLmax=doubleSpinBox_Xmax->value();
     double WL,A;
-    double stdDev=0.;
-    int Ndafi=0;
-    double thetaRns=dSB_thetaRns->value();
-    thetaRns=thetaRns*Pig/180.;
+    double RMS1=0.;
+    double RMS2=0.;
     for(int i=0;i<Nw;i++){
         WL=MRh[i][0];
         A=MRh[i][24];
-        MRh[i][27]=fmodel(WL,thetaRns,A,S,sigmaSoil,C,D,k,L,B,E);
-        if(WL>=WLmin && WL<=WLmax){
-            stdDev=stdDev+pow(MRh[i][27]-MRh[i][26],2.);
-            Ndafi++;
+        if(MeasIsLoaded[4]){
+            MRh[i][27]=fmodel(WL,Theta[1],A,S,sigmaSoil,C,D,k,L,B,E);
+            if(WL>=WLmin && WL<=WLmax){
+                RMS1=RMS1+pow(MRh[i][27]-MRh[i][26],2.);
+            }
+        }
+        if(MeasIsLoaded[5]){
+            MRh[i][32]=fmodel(WL,Theta[2],A,S,sigmaSoil,C,D,k,L,B,E);
+            if(WL>=WLmin && WL<=WLmax){
+                RMS2=RMS2+pow(MRh[i][32]-MRh[i][31],2.);
+            }
         }
     }
-    stdDev=sqrt(stdDev/Ndafi);
-    lineEdit_stdDev->setText(QString::number(stdDev));
-    Gplot(3,1,3,1,"Normalized reflectance loss",27);
+    if(MeasIsLoaded[4]){
+        lineEdit_RmsRnsNnSoil->setText(QString::number(sqrt(RMS1/Ndafit)));
+        Gplot(3,1,3,1,"Normalized reflectance loss",27);
+    }
+    if(MeasIsLoaded[5]){
+        lineEdit_RmsRnsOnSoil->setText(QString::number(sqrt(RMS2/Ndafit)));
+        Gplot(3,1,3,1,"Normalized reflectance loss",32);
+    }
 }
 
 
 void SMEQ::bestFit(){
     //best fit of normalized-reflectance loss
+    if(Gph == nullptr)
+        plotNRloss();
     iLock=1;
     double WLmin=doubleSpinBox_Xmin->value();
     double WLmax=doubleSpinBox_Xmax->value();
@@ -1372,6 +1535,12 @@ void SMEQ::bestFit(){
             Nmax=max(Nmax,i);
         }
     }
+    if(MeasIsLoaded[3]&&MeasIsLoaded[4])
+        Ndafit=Ndafit*2;
+    pTF2[0].NdatFit=Ndafit;
+    pTF2[0].Nmin=Nmin;
+    pTF2[0].Nmax=Nmax;
+    lineEdit_Ndat->setText(QString::number(Ndafit));
     printf("Ndafit= %d Nmin= %d Nmax= %d\n",Ndafit,Nmin,Nmax);
     Qt::CheckState state;
     for(int i=0; i<7; i++)
@@ -1384,8 +1553,6 @@ void SMEQ::bestFit(){
     ParFit[4][0]=doubleSpinBox_L->value();
     ParFit[5][0]=doubleSpinBox_B->value();
     ParFit[6][0]=doubleSpinBox_E->value();
-    thetaService=dSB_thetaRns->value();
-    thetaService=thetaService*Pig/180.;//to be pass to fcn
     //ParFit[7][0]=doubleSpinBox_C->value();
     int n=0;
     state = checkBox_S -> checkState();
@@ -1436,9 +1603,6 @@ void SMEQ::bestFit(){
             j++;
         }
     }
-    pTF2[0].NdatFit=Ndafit;
-    pTF2[0].Nmin=Nmin;
-    pTF2[0].Nmax=Nmax;
     int info=0;
     if(m>0 && n>0 && Ndafit>0){
         printf("Launch bestFit with %d parameters and %d data .... ",n,m);
@@ -1473,8 +1637,11 @@ void SMEQ::bestFit(){
 
 
 void SMEQ::RnsPrediction(){
+    double meanVal;
     double thetaPre=dSB_thetaPrediction->value();
-    thetaPre=thetaPre*Pig/180.;
+    if(!MeasIsLoaded[1])
+        return;
+    thetaPre=thetaPre*deg2rad;
     double phiS=dSB_Phi->value();
     phiS=phiS/1000.;
     TISc=doubleSpinBox_TIS->value();
@@ -1493,16 +1660,22 @@ void SMEQ::RnsPrediction(){
     printf("->RnsPrediction: thetaPre(rad)=%f phiS(rad)=%f sigmaSoil(nm)=%f\n",thetaPre,phiS,sigmaSoil);
     for(int i=0;i< Nw;i++){
         WL=MRh[i][0];
-        MRh[i][27]=fmodel(WL,thetaPre,MRh[i][24],S,sigmaSoil,C,D,k,L,B,E);
-        RsRpEMA(i, thetaPre, phiS, 0);//RnsCleanPrediction
-        MRh[i][13]=RnsEMAu;
-        MRh[i][28]=RnsEMAu*(1.+MRh[i][27]);//RnsSoiledPrediction
+        MRh[i][28]=fmodel(WL,thetaPre,MRh[i][24],S,sigmaSoil,C,D,k,L,B,E);
+        RsRpEMA(i, thetaPre, phiS, 0);
+        MRh[i][16]=RnsEMAu;//RnsCleanPrediction
+        MRh[i][17]=RnsEMAu*(1.+MRh[i][28]);//RnsSoiledPrediction
     }
-    double meanVal=MeanComputing(28);
-    lineEdit_meanRnsSoilPre->setText(QString::number(meanVal,'f',4));
-    Gplot(3,1,6,1,"Normalized reflectance loss",27);
-    Gplot(2,1,2,1,"R-nearspecular spectrum",28);
-    Gplot(2,1,5,1,"R-nearspecular spectrum",13);
+    if(MeasIsLoaded[1]){
+        meanVal=MeanComputing(16);
+        lineEdit_SWclean->setText(QString::number(meanVal,'f',4));
+        Gplot(2,1,1,1,"R-nearspecular spectrum",16);//Rns_clean simulation
+    }
+    if(MeasIsLoaded[4]){
+        meanVal=MeanComputing(17);
+        lineEdit_SWsoil->setText(QString::number(meanVal,'f',4));
+        Gplot(2,1,1,1,"R-nearspecular spectrum",17);//RnsSoiledPrediction
+        Gplot(3,1,1,1,"Normalized reflectance loss",28);//dNRns simulation
+    }
 }
 
 
@@ -1511,6 +1684,8 @@ double fmodel(double wl,double theta,double A,double S,double sigma,double C,dou
     //double theRad=theta/180.*pi;
     double Le=L*sqrt(pow(cos(theta),2.)+pow(E*sin(theta),2.));
     double y=(A-S*(1-exp(-pow((4*pi*sigma*pow(cos(theta),C)/wl),2.)))-D/(1+exp(-2*(wl-Le)/k)))/pow(cos(theta),B);
+    if(y<-1.0)
+        y=-1.0;
     return(y);
 }
 
@@ -1569,8 +1744,14 @@ int fcn(void *p, int m, int n, const double *x, double *fvec, int iflag){
     double WL;
     for(j=Nmin;j<=Nmax;j++){
         WL=MRh[j][0];
-        fvec[iv]=MRh[j][26]-fmodel(WL,thetaService,MRh[j][24],S,sigma,C,D,k,L,B,E);
-        iv++;
+        if(MeasIsLoaded[4]){
+            fvec[iv]=MRh[j][26]-fmodel(WL,Theta[1],MRh[j][24],S,sigma,C,D,k,L,B,E);
+            iv++;
+        }
+        if(MeasIsLoaded[5]){
+            fvec[iv]=MRh[j][31]-fmodel(WL,Theta[2],MRh[j][24],S,sigma,C,D,k,L,B,E);
+            iv++;
+        }
     }
     return(0);
 }

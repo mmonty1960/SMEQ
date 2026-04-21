@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>581</width>
-    <height>719</height>
+    <width>534</width>
+    <height>894</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -28,7 +28,7 @@
   <property name="windowTitle">
    <string>SMEQ</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_8">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_14">
      <item>
@@ -40,7 +40,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Solar Mirror Exhaustive Qualification V1.0</string>
+        <string>Solar Mirror Exhaustive Qualification V2.0</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -247,134 +247,151 @@
           </font>
          </property>
          <property name="title">
-          <string>Rhemispherical</string>
+          <string>Measurements of clean mirror</string>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <property name="spacing">
              <number>0</number>
             </property>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_3">
-              <item>
-               <widget class="QPushButton" name="pushButton_loadRh">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>150</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Load File Rh</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="lineEditRh">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_2">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>&lt;Rh&gt;</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="lineEdit_meanRh">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>80</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
-             </layout>
+           </layout>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="3" column="3">
+             <widget class="QLineEdit" name="lineEdit_meanRnsOn">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
             </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <item>
-               <widget class="QPushButton" name="pushButton_plotRh">
-                <property name="text">
-                 <string>Plot Rh</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_8">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_13">
-                <property name="text">
-                 <string>thetaRh (deg)</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QDoubleSpinBox" name="dSB_thetaRh">
-                <property name="decimals">
-                 <number>1</number>
-                </property>
-                <property name="maximum">
-                 <double>90.000000000000000</double>
-                </property>
-                <property name="value">
-                 <double>8.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-             </layout>
+            <item row="2" column="3">
+             <widget class="QLineEdit" name="lineEdit_meanRnsNn">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_37">
+              <property name="text">
+               <string>SW</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QDoubleSpinBox" name="dSB_thetaRnsOn">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <double>90.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>60.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="pushButton_loadRh">
+              <property name="text">
+               <string>Load Rh</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="pushButton_loadRnsNn">
+              <property name="text">
+               <string>Load Rns_nn</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_36">
+              <property name="text">
+               <string>Theta
+(deg)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QDoubleSpinBox" name="dSB_thetaRh">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <double>90.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>8.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_35">
+              <property name="text">
+               <string>FileName</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="dSB_thetaRnsNn">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <double>90.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>10.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QLineEdit" name="lineEdit_meanRh">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="pushButton_loadRnsOn">
+              <property name="text">
+               <string>Load Rns_on</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="lineEdit_RnsOn"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEdit_Rh"/>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="lineEdit_RnsNn"/>
             </item>
            </layout>
           </item>
@@ -648,7 +665,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>9</pointsize>
+                <pointsize>12</pointsize>
                 <bold>false</bold>
                 <strikeout>false</strikeout>
                </font>
@@ -781,152 +798,111 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_17">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_11">
-            <item>
-             <widget class="QPushButton" name="pushButton_loadRns">
-              <property name="text">
-               <string>Load file Rns</string>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="lineEdit_Rns"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>&lt;RnsE&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="lineEdit_meanRnsExp">
-              <property name="maximumSize">
+              <property name="sizeHint" stdset="0">
                <size>
-                <width>80</width>
-                <height>16777215</height>
+                <width>40</width>
+                <height>20</height>
                </size>
               </property>
+             </spacer>
+            </item>
+            <item row="0" column="1">
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>SW</string>
+              </property>
              </widget>
             </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_13">
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
-              <item>
-               <widget class="QPushButton" name="pushButton_PlotRns">
-                <property name="text">
-                 <string>Plot Rns</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushButton_fitRns">
-                <property name="text">
-                 <string>Fit Rns</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
+            <item row="0" column="4">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>RMS</string>
+              </property>
+             </widget>
             </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_4">
-              <item>
-               <widget class="QLabel" name="label_10">
-                <property name="text">
-                 <string>ThetaRns
-(deg)</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>sigma
+            <item row="1" column="0">
+             <widget class="QPushButton" name="pushButton_PlotRns">
+              <property name="text">
+               <string>Plot Rns</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>sigma
 (nm)</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
+              </property>
+             </widget>
             </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_11">
-              <item>
-               <widget class="QDoubleSpinBox" name="dSB_thetaRns">
-                <property name="maximum">
-                 <double>90.000000000000000</double>
-                </property>
-                <property name="value">
-                 <double>10.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QDoubleSpinBox" name="dSB_sigmaClean"/>
-              </item>
-             </layout>
+            <item row="1" column="2">
+             <widget class="QDoubleSpinBox" name="dSB_sigmaClean"/>
             </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_10">
-              <item>
-               <widget class="QLabel" name="label_9">
-                <property name="text">
-                 <string>Phi
+            <item row="1" column="3">
+             <widget class="QLineEdit" name="lineEdit_swRnsNnCalc"/>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLineEdit" name="lineEdit_RMS_RnsNnCalc"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="pushButton_fitRns">
+              <property name="text">
+               <string>Fit Rns</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Phi
 (mrad)</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_8">
-                <property name="text">
-                 <string>RMS</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
+              </property>
+             </widget>
             </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_14">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_7">
-                <item>
-                 <widget class="QDoubleSpinBox" name="dSB_Phi">
-                  <property name="value">
-                   <double>12.300000000000001</double>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_7">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_30">
-                  <property name="text">
-                   <string>&lt;RnsC&gt;</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="lineEdit_meanRnsCalc"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="lineEdit_RMSfit"/>
-              </item>
-             </layout>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="dSB_Phi">
+              <property name="value">
+               <double>12.300000000000001</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLineEdit" name="lineEdit_swRnsOnCalc"/>
+            </item>
+            <item row="2" column="4">
+             <widget class="QLineEdit" name="lineEdit_RMS_RnsOnCalc"/>
             </item>
            </layout>
           </item>
@@ -992,23 +968,61 @@
        <item>
         <layout class="QGridLayout" name="gridLayout">
          <item row="0" column="0">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>FileName</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_32">
+           <property name="text">
+            <string>Theta
+(deg)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>SW</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
           <widget class="QPushButton" name="pushButton_loadRhSoiled">
            <property name="text">
             <string>Load Rh soiled</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="1" column="1">
           <widget class="QLineEdit" name="lineEdit_RhSoiled"/>
          </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="label_12">
-           <property name="text">
-            <string>&lt;Rh&gt;</string>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="lineEdit_thetaHemi">
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>16777215</height>
+            </size>
            </property>
           </widget>
          </item>
-         <item row="0" column="3">
+         <item row="1" column="3">
           <widget class="QLineEdit" name="lineEdit_meanRhSoiled">
            <property name="maximumSize">
             <size>
@@ -1018,25 +1032,58 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="pushButton_loadRnsSoiled">
+         <item row="2" column="0">
+          <widget class="QPushButton" name="pushButton_loadRnsNnSoiled">
            <property name="text">
-            <string>Load Rns soiled</string>
+            <string>Load Rns_nn soiled</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_RnsSoiled"/>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineEdit_RnsNnSoiled"/>
          </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="label_14">
-           <property name="text">
-            <string>&lt;Rns&gt;</string>
+         <item row="2" column="2">
+          <widget class="QLineEdit" name="lineEdit_thetaNearn">
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>16777215</height>
+            </size>
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QLineEdit" name="lineEdit_meanRnsSoiled">
+         <item row="2" column="3">
+          <widget class="QLineEdit" name="lineEdit_meanRnsNnSoiled">
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QPushButton" name="pushButton_loadRnsOnSoiled">
+           <property name="text">
+            <string>Load Rns_on soiled</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="lineEdit_RnsOnSoiled"/>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLineEdit" name="lineEdit_thetaOffn">
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QLineEdit" name="lineEdit_meanRnsOnSoiled">
            <property name="maximumSize">
             <size>
              <width>80</width>
@@ -1050,7 +1097,7 @@
        <item>
         <widget class="QPushButton" name="pushButton_PlotRns2">
          <property name="text">
-          <string>Plot Rns</string>
+          <string>Plot Rh and Rns</string>
          </property>
         </widget>
        </item>
@@ -1290,7 +1337,7 @@
             <widget class="QDoubleSpinBox" name="doubleSpinBox_S">
              <property name="font">
               <font>
-               <pointsize>9</pointsize>
+               <pointsize>12</pointsize>
                <bold>false</bold>
               </font>
              </property>
@@ -1367,7 +1414,7 @@
                   <double>0.010000000000000</double>
                  </property>
                  <property name="value">
-                  <double>-0.200000000000000</double>
+                  <double>-0.900000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -1383,55 +1430,6 @@
                </property>
                <property name="text">
                 <string>Best Fit in</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_8">
-             <item>
-              <widget class="QLabel" name="label_26">
-               <property name="text">
-                <string>WL (nm)</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_Xmin">
-               <property name="decimals">
-                <number>0</number>
-               </property>
-               <property name="minimum">
-                <double>250.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>2500.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>1.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>250.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_Xmax">
-               <property name="decimals">
-                <number>0</number>
-               </property>
-               <property name="minimum">
-                <double>250.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>2500.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>1.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>2500.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -1460,7 +1458,10 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lineEdit_stdDev"/>
+              <widget class="QLineEdit" name="lineEdit_RmsRnsNnSoil"/>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEdit_RmsRnsOnSoil"/>
              </item>
             </layout>
            </item>
@@ -1468,47 +1469,117 @@
          </item>
         </layout>
        </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_16">
-         <item>
-          <widget class="QPushButton" name="pushButton_RnsPrediction">
-           <property name="text">
-            <string>Predict Rns</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_23">
-           <property name="text">
-            <string>ThetaPrediction (deg)</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDoubleSpinBox" name="dSB_thetaPrediction">
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <double>90.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_25">
-           <property name="text">
-            <string>&lt;RnsSoiled&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="lineEdit_meanRnsSoilPre"/>
-         </item>
-        </layout>
-       </item>
       </layout>
      </widget>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_16">
+     <item>
+      <widget class="QPushButton" name="pushButton_RnsPrediction">
+       <property name="text">
+        <string>Predict</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_23">
+       <property name="text">
+        <string>@ Theta
+(deg)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="dSB_thetaPrediction">
+       <property name="decimals">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <double>90.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_25">
+       <property name="text">
+        <string>SWclean</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit_SWclean"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>SWsoil</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit_SWsoil"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <item>
+      <widget class="QLabel" name="label_26">
+       <property name="text">
+        <string>Fit range: WL (nm)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="doubleSpinBox_Xmin">
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>250.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>2500.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>350.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="doubleSpinBox_Xmax">
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="minimum">
+        <double>250.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>2500.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>2400.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_31">
+       <property name="text">
+        <string>Ndat</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit_Ndat"/>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_15">

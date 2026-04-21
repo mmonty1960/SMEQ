@@ -73,9 +73,11 @@ private:
 public Q_SLOTS:
     void setRange();
     void getFileRh();
-    void getFileRns();
+    void getFileRnsNn();
+    void getFileRnsOn();
     void getFileRhSoiled();
     void getFileRnsSoiled();
+    void getFileRnsOnSoiled();
     double MeanComputing(int iMis);
     void getFileNKover();
     void getFileNKmetal();
@@ -87,7 +89,7 @@ public Q_SLOTS:
     void PlotRns();
     void PlotRns2();
     void fitRns();
-    int nkCheck();
+    bool nkCheck();
     void calcPlot();
     void bestFit();
     void Gplot(int iGraph, int iRD, int iColor, int iStyle, QString title, int iQ);
